@@ -22,6 +22,14 @@ line. No cost tracking, no network, no state.
 
 ## Install
 
+Install `jq` first if you don't have it (the status line needs it):
+
+```sh
+brew install jq
+```
+
+Then run:
+
 ```sh
 ./install.sh
 ```
