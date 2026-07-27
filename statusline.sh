@@ -4,10 +4,13 @@
 
 input=$(cat)
 
-model=$(printf '%s' "$input" | jq -r '.model.display_name')
-model_id=$(printf '%s' "$input" | jq -r '.model.id')
-dir=$(printf '%s' "$input" | jq -r '.workspace.current_dir')
-transcript=$(printf '%s' "$input" | jq -r '.transcript_path')
+# Use full path to jq since Claude Code may run with a minimal PATH
+JQ=$(command -v jq 2>/dev/null || echo "/usr/local/bin/jq")
+
+model=$(printf '%s' "$input" | "$JQ" -r '.model.display_name')
+model_id=$(printf '%s' "$input" | "$JQ" -r '.model.id')
+dir=$(printf '%s' "$input" | "$JQ" -r '.workspace.current_dir')
+transcript=$(printf '%s' "$input" | "$JQ" -r '.transcript_path')
 repo=$(basename "$dir")
 branch=$(git -C "$dir" --no-optional-locks rev-parse --abbrev-ref HEAD 2>/dev/null)
 
@@ -20,7 +23,7 @@ esac
 # Current context size = the most recent non-sidechain assistant turn's input footprint.
 used=0
 if [ -f "$transcript" ]; then
-  used=$(jq -s '
+  used=$("$JQ" -s '
     map(select(.message.usage != null and (.isSidechain // false) == false))
     | last
     | if . == null then 0
