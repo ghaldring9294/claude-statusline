@@ -31,8 +31,24 @@ if [ -z "$fields" ]; then
 fi
 IFS=$'\x1f' read -r model model_id dir transcript pct_left <<< "$fields"
 
-repo=${dir##*/}
-branch=$(git -C "$dir" --no-optional-locks rev-parse --abbrev-ref HEAD 2>/dev/null)
+# Name the repo by its top level, so a cd into a subfolder still shows the repo.
+root=$(git -C "$dir" --no-optional-locks rev-parse --show-toplevel 2>/dev/null)
+repo=${root:-$dir}
+repo=${repo##*/}
+
+# One status call gives branch, ahead count (local only, no fetch) and dirtiness.
+branch="" ahead=0 dirty=""
+if [ -n "$root" ]; then
+  while IFS= read -r line; do
+    case "$line" in
+      "# branch.head "*) branch=${line#"# branch.head "} ;;
+      "# branch.ab +"*) ahead=${line#"# branch.ab +"}; ahead=${ahead%% *} ;;
+      "#"*) ;;
+      *) dirty="*" ;;
+    esac
+  done < <(git -C "$root" --no-optional-locks status --porcelain=v2 --branch 2>/dev/null)
+fi
+[ "$branch" = "(detached)" ] && branch=HEAD
 
 # Prefer Claude Code's own figure; it knows the real window size for every model.
 # Fallback (field absent, e.g. before the first reply): estimate from the transcript.
@@ -81,7 +97,11 @@ reset=$'\033[0m'
 short_model=${model% (*}
 
 location="$repo"
-[ -n "$branch" ] && location="$repo ($branch)"
+if [ -n "$branch" ]; then
+  marks="$dirty"
+  [ "$ahead" -gt 0 ] && marks="$marks ↑$ahead"
+  location="$repo ($branch$marks)"
+fi
 
 printf '%s %s[%s %d%%]%s | %s\n' \
   "$short_model" \

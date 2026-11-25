@@ -3,7 +3,7 @@
 A single-file [Claude Code](https://claude.com/claude-code) status line:
 
 ```
-Opus 5.5 [████████░░ 92%] | repo (feature/branch)
+Opus 5.5 [████████░░ 92%] | repo (feature/branch* ↑1)
 ```
 
 - **Model** — display name, with the `(1M context)` suffix trimmed.
@@ -12,7 +12,10 @@ Opus 5.5 [████████░░ 92%] | repo (feature/branch)
   Uses Claude Code's own `context_window.remaining_percentage`; before the
   first reply it estimates from the transcript (1M for `[1m]` models, 200k
   otherwise).
-- **Location** — repo directory and current git branch.
+- **Location** — repo name (its top-level folder, even from a subfolder) and
+  current git branch. `*` means uncommitted changes (including untracked
+  files); `↑2` means two local commits not yet pushed. Both are local checks;
+  it never fetches.
 
 Purely presentational — it reads the status-line JSON on stdin and prints one
 line. No cost tracking, no network, no state.
