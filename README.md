@@ -2,9 +2,7 @@
 
 A single-file [Claude Code](https://claude.com/claude-code) status line:
 
-```
-Opus 5.5 [████████░░ 92%] | repo (feature/branch* ↑1)
-```
+![The status line in five states: plenty of context on a clean branch; over half used with uncommitted changes; running low with two unpushed commits; outside a git repo; and the jq-not-found error](docs/states.svg)
 
 - **Model** — display name, with the `(1M context)` suffix trimmed.
 - **Context gauge** — a bar showing context *remaining* (it drains as the window
@@ -69,3 +67,6 @@ Copy or symlink `statusline.sh` somewhere, then point Claude Code at it in
 
 Covers the context gauge (thresholds, transcript fallback), the error messages
 and each git state, using throwaway repos in a temp dir.
+
+The README picture is rendered from the script's real output. After changing
+how the line looks, run `docs/render.sh` to refresh `docs/states.svg`.
