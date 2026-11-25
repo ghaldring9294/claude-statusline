@@ -3,26 +3,33 @@
 A single-file [Claude Code](https://claude.com/claude-code) status line:
 
 ```
-Opus 4.8 [████████░░ 92%] | repo (feature/branch)
+Opus 5.5 [████████░░ 92%] | repo (feature/branch)
 ```
 
 - **Model** — display name, with the `(1M context)` suffix trimmed.
 - **Context gauge** — a bar showing context *remaining* (it drains as the window
   fills), plus the percentage. Green > 50% left, yellow > 20%, red below.
-  Uses Claude Code's own `context_window.remaining_percentage`; before the first reply it estimates from the transcript (1M for `[1m]` models, 200k otherwise).
+  Uses Claude Code's own `context_window.remaining_percentage`; before the
+  first reply it estimates from the transcript (1M for `[1m]` models, 200k
+  otherwise).
 - **Location** — repo directory and current git branch.
 
 Purely presentational — it reads the status-line JSON on stdin and prints one
 line. No cost tracking, no network, no state.
 
+If something is wrong it says so instead of showing a misleading gauge:
+`statusline: jq not found` or `statusline: could not parse input`.
+
 ## Requirements
 
-- `jq`
+- `jq` — included with macOS 15 and later. The script finds it in
+  `/opt/homebrew/bin`, `/usr/local/bin` or `/usr/bin` even when Claude Code
+  runs it with a minimal `PATH`.
 - `git` (branch display degrades to just the repo name if unavailable)
 
 ## Install
 
-Install `jq` first if you don't have it (the status line needs it):
+If `jq --version` fails, install it first:
 
 ```sh
 brew install jq
