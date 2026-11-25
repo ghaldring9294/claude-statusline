@@ -9,7 +9,7 @@ Opus 4.8 [████████░░ 92%] | repo (feature/branch)
 - **Model** — display name, with the `(1M context)` suffix trimmed.
 - **Context gauge** — a bar showing context *remaining* (it drains as the window
   fills), plus the percentage. Green > 50% left, yellow > 20%, red below.
-  The window size auto-detects: 1M for `[1m]` models, 200k otherwise.
+  Uses Claude Code's own `context_window.remaining_percentage`; before the first reply it estimates from the transcript (1M for `[1m]` models, 200k otherwise).
 - **Location** — repo directory and current git branch.
 
 Purely presentational — it reads the status-line JSON on stdin and prints one

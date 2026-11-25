@@ -14,13 +14,16 @@ transcript=$(printf '%s' "$input" | "$JQ" -r '.transcript_path')
 repo=$(basename "$dir")
 branch=$(git -C "$dir" --no-optional-locks rev-parse --abbrev-ref HEAD 2>/dev/null)
 
-# Context window size depends on the model (1M variant vs standard 200k).
+# Prefer Claude Code's own figure; it knows the real window size for every model.
+pct_left=$(printf '%s' "$input" | "$JQ" -r '.context_window.remaining_percentage // empty | floor')
+
+# Fallback (field absent, e.g. before the first reply): estimate from the transcript.
+if [ -z "$pct_left" ]; then
 case "$model_id" in
   *1m* | *1M* | *"[1m]"*) limit=1000000 ;;
   *) limit=200000 ;;
 esac
 
-# Current context size = the most recent non-sidechain assistant turn's input footprint.
 used=0
 if [ -f "$transcript" ]; then
   used=$("$JQ" -s '
@@ -35,6 +38,7 @@ fi
 [ -z "$used" ] && used=0
 
 pct_left=$(( (limit - used) * 100 / limit ))
+fi
 [ "$pct_left" -lt 0 ] && pct_left=0
 [ "$pct_left" -gt 100 ] && pct_left=100
 
