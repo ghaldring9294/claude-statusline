@@ -8,7 +8,7 @@ tmp=$(mktemp -d)
 trap 'rm -rf "$tmp"' EXIT
 fails=0
 
-green=$'\033[32m' yellow=$'\033[33m' red=$'\033[31m'
+green=$'\033[32m' yellow=$'\033[33m' red=$'\033[31m' reset=$'\033[0m'
 
 # payload <current_dir> [extra JSON members]
 payload() {
@@ -54,6 +54,24 @@ check "transcript fallback, 1M window" "85%]" \
 # New session, no usage anywhere yet: full battery.
 check "null field, no transcript" "100%]" \
   "$(payload /tmp '"context_window":{"remaining_percentage":null}' | run)"
+
+# --- Cost ----------------------------------------------------------------------
+
+dim=$'\033[2m'
+cost() { payload /tmp "\"context_window\":{\"remaining_percentage\":90},\"cost\":{\"total_cost_usd\":$1}" | run; }
+
+# Always two decimals, so the width doesn't jitter as the total grows.
+check "cost rounds to cents"       "${dim}\$1.23" "$(cost 1.2345)"
+check "cost pads a trailing zero"  "${dim}\$0.50" "$(cost 0.5)"
+check "cost pads a leading zero"   "${dim}\$0.07" "$(cost 0.07)"
+check "whole dollars get cents"    "${dim}\$12.00" "$(cost 12)"
+check "new session shows \$0.00"   "${dim}\$0.00" "$(cost 0)"
+check "cost comes last"            "| tmp | ${dim}\$1.23${reset}" "$(cost 1.23)"
+
+# Older Claude Code without the field: no segment, rather than a misleading $0.00.
+out=$(payload /tmp '"context_window":{"remaining_percentage":90}' | run)
+case "$out" in *'$'*) check "no cost field, no segment" "no \$" "$out" ;;
+  *) echo "ok   no cost field, no segment" ;; esac
 
 # --- Model ---------------------------------------------------------------------
 

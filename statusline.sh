@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Claude Code status line: model [context battery] | repo (branch* ↑N)
+# Claude Code status line: model [context battery] | repo (branch* ↑N) | $cost
 # Reads the statusline JSON payload on stdin.
 
 input=$(cat)
@@ -23,13 +23,16 @@ fields=$(printf '%s' "$input" | "$JQ" -r '[
     .model.id // "",
     .workspace.current_dir // "",
     .transcript_path // "",
-    (.context_window.remaining_percentage | if . == null then "" else floor end)
+    (.context_window.remaining_percentage | if . == null then "" else floor end),
+    # Cents formatted in jq: bash printf %.2f follows the locale (1,23 in some).
+    (.cost.total_cost_usd | if . == null then "" else
+      (. * 100 | round) as $c | "\($c / 100 | floor)." + ("0\($c % 100)" | .[-2:]) end)
   ] | map(tostring) | join("\u001f")' 2>/dev/null)
 if [ -z "$fields" ]; then
   printf 'statusline: could not parse input\n'
   exit 0
 fi
-IFS=$'\x1f' read -r model model_id dir transcript pct_left <<< "$fields"
+IFS=$'\x1f' read -r model model_id dir transcript pct_left cost <<< "$fields"
 
 # Name the repo by its top level, so a cd into a subfolder still shows the repo.
 root=$(git -C "$dir" --no-optional-locks rev-parse --show-toplevel 2>/dev/null)
@@ -103,7 +106,11 @@ if [ -n "$branch" ]; then
   location="$repo ($branch$marks)"
 fi
 
-printf '%s %s[%s %d%%]%s | %s\n' \
+# Claude Code's estimate at API prices; muted, as it's context rather than a warning.
+cost_part=""
+[ -n "$cost" ] && cost_part=$(printf ' | \033[2m$%s%s' "$cost" "$reset")
+
+printf '%s %s[%s %d%%]%s | %s%s\n' \
   "$short_model" \
   "$color" "$bar" "$pct_left" "$reset" \
-  "$location"
+  "$location" "$cost_part"

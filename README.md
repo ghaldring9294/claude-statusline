@@ -14,9 +14,14 @@ A single-file [Claude Code](https://claude.com/claude-code) status line:
   current git branch. `*` means uncommitted changes (including untracked
   files); `↑2` means two local commits not yet pushed. Both are local checks;
   it never fetches.
+- **Cost** — at the end, muted: the session's running cost (`$1.23`). This is
+  Claude Code's own estimate at API prices (`cost.total_cost_usd`); on a
+  Pro/Max plan it's what the session *would* cost, not what you're billed.
+  Hidden if your Claude Code version doesn't send it.
 
 Purely presentational — it reads the status-line JSON on stdin and prints one
-line. No cost tracking, no network, no state.
+line. It shows Claude Code's cost estimate but doesn't track or store anything:
+no network, no state.
 
 If something is wrong it says so instead of showing a misleading gauge:
 `statusline: jq not found` or `statusline: could not parse input`.
@@ -65,7 +70,8 @@ Copy or symlink `statusline.sh` somewhere, then point Claude Code at it in
 ./test.sh
 ```
 
-Covers the context gauge (thresholds, transcript fallback), the error messages
+Covers the context gauge (thresholds, transcript fallback), cost formatting,
+the error messages
 and each git state, using throwaway repos in a temp dir.
 
 The README picture is rendered from the script's real output. After changing
