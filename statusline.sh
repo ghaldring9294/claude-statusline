@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Claude Code status line: model | repo (branch) | context-window bar
+# Claude Code status line: model [context battery] | repo (branch* ↑N)
 # Reads the statusline JSON payload on stdin.
 
 input=$(cat)

@@ -60,3 +60,12 @@ Copy or symlink `statusline.sh` somewhere, then point Claude Code at it in
   }
 }
 ```
+
+## Tests
+
+```sh
+./test.sh
+```
+
+Covers the context gauge (thresholds, transcript fallback), the error messages
+and each git state, using throwaway repos in a temp dir.
